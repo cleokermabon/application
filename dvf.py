@@ -102,17 +102,29 @@ dvf = gpd.read_parquet(DATA_LOCATION / "dvf.parquet")
 # DuckDB cannot read the geometry column as Pandas formatted it
 dvf_attributs = dvf.drop(columns="geometry")
 
-bad = con.sql("""
-    SELECT COUNT(*) AS n_bad
-    FROM dvf_attributs
-    WHERE length(code_commune) <> 5
-    OR NOT starts_with(code_commune, code_departement)
-""").fetchall()[0][0]
+def check_code_commune_formatting(code_commune, code_departement):
+    """vérifie que la colonne “code_commune” est bien composée de 5 caractères
+    commençant par le code du département"""
 
-if bad == 0:
-    print("Test OK: code_commune always has 5 characters starting with the department")
-else:
-    print(f"Issue in code_commune: {bad} malformed codes")
+    bad = con.sql("""
+        SELECT COUNT(*) AS n_bad
+        FROM dvf_attributs
+        WHERE length(code_commune) <> 5
+        OR NOT starts_with(code_commune, code_departement)
+    """).fetchall()[0][0]
+
+    if bad == 0:
+        print("Test OK: code_commune always has 5 characters starting with the department")
+    else:
+        print(f"Issue in code_commune: {bad} malformed codes")
+
+def check_missing_values(col):
+    missing = con.sql("""
+        SELECT * FROM dvf_attributs
+        WHERE col IS NULL
+    """).fetchall()[0][0]
+    return missing
+
 
 n_missing = con.sql("""
     SELECT COUNT(*) AS n_missing
