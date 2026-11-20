@@ -104,7 +104,6 @@ if bad == 0:
 else:
     print(f"Issue in code_commune: {bad} malformed codes")
 
-# TODO: generalize to all variables
 n_missing = con.sql("""
     SELECT COUNT(*) AS n_missing
     FROM dvf_attributs
