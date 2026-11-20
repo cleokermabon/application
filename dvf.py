@@ -389,18 +389,18 @@ features = NUMERIC_FEATURES + CATEGORICAL_FEATURES
 X = dvf_start_data[features]
 y = dvf_start_data["prix_m2"]
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1, random_state=0)
+X_TRAIN, X_TEST, y_train, y_test = train_test_split(X, y, test_size=0.1, random_state=0)
 
-pd.concat([X_train, y_train], axis=1).to_csv("train.csv")
-pd.concat([X_test, y_test], axis=1).to_csv("test.csv")
+pd.concat([X_TRAIN, y_train], axis=1).to_csv("train.csv")
+pd.concat([X_TEST, y_test], axis=1).to_csv("test.csv")
 
 
 # SPLIT VALIDATION ---------------------------------------
 
 # Test categories never seen in training are encoded as unknown (-1): the model
 # has learned nothing about them, so their predictions are unreliable.
-if set(X_test["code_commune"].dropna().unique()) - set(
-    X_train["code_commune"].dropna().unique()
+if set(X_TEST["code_commune"].dropna().unique()) - set(
+    X_TRAIN["code_commune"].dropna().unique()
 ):
     message = "Categories of code_commune missing from the training set"
 else:
@@ -408,8 +408,8 @@ else:
 
 print(message)
 
-if set(X_test["type_local"].dropna().unique()) - set(
-    X_train["type_local"].dropna().unique()
+if set(X_TEST["type_local"].dropna().unique()) - set(
+    X_TRAIN["type_local"].dropna().unique()
 ):
     message = "Categories of type_local missing from the training set"
 else:
@@ -420,16 +420,16 @@ print(message)
 
 # TRAINING AND EVALUATION ---------------------------------------
 
-pipe.fit(X_train, y_train)
+pipe.fit(X_TRAIN, y_train)
 
-rmse_train = root_mean_squared_error(y_train, pipe.predict(X_train))
-rmse_test = root_mean_squared_error(y_test, pipe.predict(X_test))
+rmse_train = root_mean_squared_error(y_train, pipe.predict(X_TRAIN))
+rmse_test = root_mean_squared_error(y_test, pipe.predict(X_TEST))
 print(f"RMSE sur l'apprentissage : {rmse_train:,.0f} €/m²")
 print(f"RMSE sur le test : {rmse_test:,.0f} €/m²")
 
-residuals = X_test[["code_commune"]].copy()
+residuals = X_TEST[["code_commune"]].copy()
 residuals["y_test"] = y_test
-residuals["pred"] = pipe.predict(X_test)
+residuals["pred"] = pipe.predict(X_TEST)
 
 rmse_commune = (
     residuals.groupby("code_commune")
@@ -458,9 +458,9 @@ print("Évaluation skore ---------------------")
 # the training time.
 report = EstimatorReport(
     clone(pipe),
-    X_train=X_train,
+    X_train=X_TRAIN,
     y_train=y_train,
-    X_test=X_test,
+    X_test=X_TEST,
     y_test=y_test,
 )
 
