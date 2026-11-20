@@ -3,6 +3,8 @@ Predict the price per m² of homes sold in Paris and its inner suburbs
 from DVF transactions enriched with Filosofi socio-economic data
 """
 
+import argparse
+import os
 from pathlib import Path
 
 import duckdb
@@ -12,6 +14,7 @@ import numpy as np
 import pandas as pd
 import requests
 import seaborn as sns
+from dotenv import load_dotenv
 from lightgbm import LGBMRegressor
 from sklearn.base import clone
 from sklearn.compose import ColumnTransformer, TransformedTargetRegressor
@@ -22,7 +25,13 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import FunctionTransformer, OrdinalEncoder
 from skore import EstimatorReport
 
-N_TREES = 1500
+load_dotenv()
+
+parser = argparse.ArgumentParser(description="Nombre d'arbres ?")
+parser.add_argument("--n_trees", type=int, default="1500", help="Un nombre entier")
+args = parser.parse_args()
+
+N_TREES = args.n_trees
 LEARNING_RATE = 0.03
 NUM_LEAVES = 31
 NUMERIC_FEATURES = [
@@ -46,6 +55,7 @@ CATEGORICAL_FEATURES = ["code_commune", "type_local"]
 DEPARTEMENTS_PARIS = ["75", "92", "93", "94"]
 
 JETON_API = "1SuperJetonUltraConfidentiel!!!"
+jeton_api = os.environ["JETON_API"]
 
 DATA_LOCATION = Path("data")
 SOURCES = {
@@ -175,7 +185,7 @@ dvf = dvf.to_crs(filo.crs)
 dvf = dvf.sjoin(filo, how="left", predicate="within")
 
 
-# Filosofi municipality-level data (Melodi API)
+# Filosofi municipality-level data (Melodi)
 # DVF codes Paris by arrondissement (75101 to 75120), not as one municipality
 # (75056): without the ARM level, Paris sales would get no municipality data.
 
